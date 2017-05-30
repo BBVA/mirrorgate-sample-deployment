@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+  mongo:
+    image: "mongo"
+    ports:
+      - "27017:27017"
+  app:
+    image: "bbvaae/mirrorgate"
+    links:
+      - mongo
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/dashboarddb
+      - SPRING_PROFILES_ACTIVE=embedded
+      - SERVER_CONTEXT_PATH=/mirrorgate
+      - SPRING_RESOURCE_CACHE_PERIOD=0
+      - SPRING_RESOURCE_STATIC_LOCATIONS=classpath:/public/
+    ports:
+      - "8080:8080"
+  jira-collector:
+    image: "bbvaae/mirrorgate-jira-stories-collector"
+    environment:
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_USERNAME=${JIRA_USERNAME}
+      - JIRA_PASSWORD=${JIRA_PASSWORD}
+      - JIRA_FIELDS_STORYPOINTS=${JIRA_FIELDS_STORYPOINTS}
+      - JIRA_FIELDS_SPRINT=${JIRA_FIELDS_SPRINT}
+      - JIRA_FIELDS_KEYWORDLIST=${JIRA_FIELDS_KEYWORDLIST}
+      - JIRA_MONTHSOFHISTORY=1
+      - MIRRORGATE_URL=http://app:8080/mirrorgate
+    links:
+      - app
+  jenkins:
+    image: jenkins
+    ports:
+      - "9000:8080"
+    links:
+      - app
